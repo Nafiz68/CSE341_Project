@@ -4,8 +4,8 @@
 
 .DATA
 display db "WELCOME TO VOTING SYSTEM INTERFACE$", 0
-voterNames db "nafiz", "tanni", "takib"   ; Predefined Voter Names (3)
-voterPasswords db "ab2de", "qa&in", "sk@12"  ; Corresponding Passwords for each Voter Name
+voterNames db "nafiz", "tanni", "takib"   
+voterPasswords db "ab2de", "qa&in", "sk@12"  
 msgEnterName db "Enter Voter Name: $", 0
 msgEnterPassword db "Enter Password: $", 0
 msgAuthSuccessN db "Authentication successful. Proceeding...$", 0
@@ -14,8 +14,8 @@ msgEnterYear db "Enter Your Birth Year: $", 0
 msgEligible db "You are eligible to vote.$", 0
 msgNotEligible db "You are NOT eligible to vote.$", 0
 
-voterIDs db "1234", "5678", "9101"   ; Predefined Voter IDs (3)
-voterpins db "1111", "1234", "5678"  ; Corresponding PINs for each Voter ID
+voterIDs db "1234", "5678", "9101"   
+voterpins db "1111", "1234", "5678"  
 msgEnterID db "Enter Voter ID: $"
 msgEnterPIN db "Enter PIN: $"
 msgAuthSuccess db "ID and PIN are valid. Access granted.$"
@@ -38,21 +38,21 @@ newline db 0DH, 0AH, "$", 0
 
 votedIDs db 40 dup(0) 
 
-inputName db 5 dup(?)                  ; Buffer for input (voter name)
-inputPassword db 5 dup(?)              ; Buffer for input (password)
-validPositionN db ?                     ; Stores the matched name position (offset)
-inputYear db 4 dup(?)                  ; Buffer for input (birth year)
-currentYear dw 2024                   ; Current year for age calculation
-age dw ?                               ; Calculated age
-voterCount db 3                        ; Number of voters
+inputName db 5 dup(?)                  
+inputPassword db 5 dup(?)              
+validPositionN db ?                     
+inputYear db 4 dup(?)                  
+currentYear dw 2024                   
+age dw ?                               
+voterCount db 3                        
 
-inputID db 4 dup(?)                  ; Buffer for input (voter ID)
-inputPIN db 4 dup(?)                 ; Buffer for input (PIN)
-validPosition db ?                   ; Stores the matched ID position (offset)
-;voterCount db 3                      ; Number of voters
+inputID db 4 dup(?)                 
+inputPIN db 4 dup(?)                
+validPosition db ?                   
+;voterCount db 3                      
 
-; Candidate list and vote storage
-candidates db "Candidate 1$","Candidate 2$","Candidate 3$" ; List of candidates
+
+candidates db "Candidate 1$","Candidate 2$","Candidate 3$" 
 votes db 0, 0, 0
 invalidAttemptsPass db 0
 invalidAttemptsPin db 0 
@@ -64,7 +64,8 @@ MAIN PROC
 MOV AX, @DATA
 MOV DS, AX
 
-; Display welcome message
+
+; welcome message
 LEA DX, display
 MOV AH, 09H
 INT 21H
@@ -73,110 +74,113 @@ MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
+INT 21H 
 
-; Prompt user to enter Voter Name
+;*************************************************Nafiz*******************************************
+
+;Voter Name
 LEA DX, msgEnterName
 MOV AH, 09H
 INT 21H
 
-; Get Voter Name input
-MOV CX, 5                ; Max length of voter name (4 characters)
-LEA SI, inputName        ; SI points to buffer
+
+MOV CX, 5                
+LEA SI, inputName        
 
 InputNameLoop:
-MOV AH, 1                ; DOS function to read a single character
-INT 21h                  ; Read input character
-MOV [SI], AL             ; Store the character in the buffer
-INC SI                   ; Move buffer pointer to next position
-LOOP InputNameLoop       ; Loop for 4 characters
+MOV AH, 1               
+INT 21h                  
+MOV [SI], AL            
+INC SI                   
+LOOP InputNameLoop       
 
-; Check the input name against predefined voter names
-MOV CX, 3                ; Number of predefined voter names
-LEA DI, voterNames       ; DI points to voterNames array
-MOV validPositionN, -1    ; Initialize to -1 (no match yet)
+
+MOV CX, 3                
+LEA DI, voterNames       
+MOV validPositionN, -1    
 
 CheckVoterName:
-    PUSH CX              ; Save loop counter
-    MOV SI, OFFSET inputName ; SI points to input buffer
-    MOV BX, 0            ; Index for current digit
+    PUSH CX              
+    MOV SI, OFFSET inputName 
+    MOV BX, 0            
 
 CompareDigitsN:
-    MOV AL, [SI + BX]    ; Load input digit
-    MOV DL, [DI + BX]    ; Load current name digit
-    CMP AL, DL           ; Compare digits
-    JNE NotMatchN         ; If mismatch, go to NotMatch
-    INC BX               ; Increment index
-    CMP BX, 5            ; Check if all 4 digits are compared
-    JNE CompareDigitsN    ; Loop if not
+    MOV AL, [SI + BX]    
+    MOV DL, [DI + BX]    
+    CMP AL, DL           
+    JNE NotMatchN         
+    INC BX               
+    CMP BX, 5            
+    JNE CompareDigitsN    
 
-    ; If match found, calculate position
-    MOV AX, DI               ; Save the pointer to the matched name
-    SUB AX, OFFSET voterNames ; Calculate offset from base
-    MOV CL, 5                ; Correct element size (each name is 5 bytes)
-    DIV CL                   ; Divide by 5 to get the correct index
-    MOV validPositionN, AL    ; Store position in validPosition
+    
+    MOV AX, DI               
+    SUB AX, OFFSET voterNames 
+    MOV CL, 5                
+    DIV CL                   
+    MOV validPositionN, AL    
 
-    POP CX               ; Restore loop counter
-    JMP DoneCheckingN     ; Skip further checks
+    POP CX               
+    JMP DoneCheckingN     
 
 NotMatchN:
-    ADD DI, 5            ; Move to next name
-    POP CX               ; Restore loop counter
-    LOOP CheckVoterName  ; Continue loop
+    ADD DI, 5            
+    POP CX              
+    LOOP CheckVoterName  
 
 DoneCheckingN:
-    CMP validPositionN, -1 ; Check if no name matched
-    JE InvalidInputName  ; If no match, display error
+    CMP validPositionN, -1 
+    JE InvalidInputName  
 
-; Prompt for Password input
+;Password 
 MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
+INT 21H 
+
 LEA DX, msgEnterPassword
 MOV AH, 09H
 INT 21H
 
-MOV CX, 5                ; Max length of password (4 characters)
-LEA SI, inputPassword    ; SI points to buffer for password
+MOV CX, 5                
+LEA SI, inputPassword    
 
 InputPasswordLoop:
-MOV AH, 1                ; DOS function to read a single character
-INT 21h                  ; Read input character
-MOV [SI], AL             ; Store the character in the buffer
-INC SI                   ; Move buffer pointer to next position
-LOOP InputPasswordLoop   ; Loop for 4 characters
+MOV AH, 1                
+INT 21h                  
+MOV [SI], AL             
+INC SI                   
+LOOP InputPasswordLoop   
 
-; Match Password using the stored offset
-MOV AL, validPositionN     ; Get the matched name position
-MOV BL, AL                ; Copy position to BL
-MOV AX, BX                ; Load position into AX
-MOV CL, 5                 ; Correct element size (each name/password is 5 bytes)
-MUL CL                    ; Multiply by 5 to get the correct offset
-LEA DI, voterPasswords    ; DI points to voterPasswords array
-ADD DI, AX                ; Adjust DI to matched password position
 
-MOV CX, 5                 ; Compare 4 password digits
-LEA SI, inputPassword     ; SI points to input password buffer
+MOV AL, validPositionN     
+MOV BL, AL                
+MOV AX, BX               
+MOV CL, 5                
+MUL CL                   
+LEA DI, voterPasswords    
+ADD DI, AX                
+
+MOV CX, 5                
+LEA SI, inputPassword     
 
 ComparePassword:
-MOV AL, [SI]              ; Load input password digit
-MOV DL, [DI]              ; Load corresponding password digit
-CMP AL, DL               ; Compare digits
-JNE InvalidInputPassword  ; If mismatch, go to error
-INC SI                    ; Move to next digit
-INC DI                    ; Move to next password digit
-LOOP ComparePassword      ; Loop through all digits
+MOV AL, [SI]              
+MOV DL, [DI]             
+CMP AL, DL              
+JNE InvalidInputPassword  
+INC SI                    
+INC DI                    
+LOOP ComparePassword      
 
 
-; If password matches, prompt for birth year
 MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
+INT 21H 
+
 LEA DX, msgAuthSuccessN
 MOV AH, 09H
 INT 21H
@@ -185,94 +189,95 @@ MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
+INT 21H 
 
-; Prompt for birth year
+;Birth year
 LEA DX, msgEnterYear
 MOV AH, 09H
 INT 21H
 
-; Get Birth Year input (4 digits)
-MOV CX, 4                ; Expect 4 digits for year
-LEA SI, inputYear        ; SI points to the buffer
+
+MOV CX, 4                
+LEA SI, inputYear       
 
 InputYearLoop:
-MOV AH, 1                ; DOS function to read a single character
-INT 21h                  ; Read input character
-MOV [SI], AL             ; Store the character in the buffer
-INC SI                   ; Move to the next position in the buffer
-LOOP InputYearLoop       ; Repeat until all 4 digits are read
+MOV AH, 1                
+INT 21h                 
+MOV [SI], AL             
+INC SI                   
+LOOP InputYearLoop       
 
-; Convert input birth year from ASCII to integer
-MOV AX, 0                ; Clear AX to accumulate the year value
-MOV BX, 10               ; Base 10 for decimal conversion
 
-LEA SI, inputYear        ; SI points to input year buffer
+MOV AX, 0                
+MOV BX, 10              
 
-; Convert each digit from ASCII to integer and calculate the year
-MOV CL, [SI]             ; Load the first digit
-SUB CL, '0'              ; Convert ASCII to integer
-MOV DX, AX               ; Save AX into DX to preserve it
-MOV AX, BX               ; Move 10 into AX (for multiplication)
-IMUL DX                  ; Multiply AX by 10 (AX = AX * 10)
-ADD AX, Cx               ; Add the current digit to AX
+LEA SI, inputYear        
 
-INC SI                   ; Move to second digit
 
-MOV CL, [SI]             ; Load the second digit
-SUB CL, '0'              ; Convert ASCII to integer
-MOV DX, AX               ; Save AX into DX to preserve it
-MOV AX, BX               ; Move 10 into AX (for multiplication)
-IMUL DX                  ; Multiply AX by 10
-ADD AX, Cx               ; Add the second digit
+MOV CL, [SI]             
+SUB CL, '0'              
+MOV DX, AX               
+MOV AX, BX               
+IMUL DX                  
+ADD AX, Cx               
 
-INC SI                   ; Move to third digit
+INC SI                   
 
-MOV CL, [SI]             ; Load the third digit
-SUB CL, '0'              ; Convert ASCII to integer
-MOV DX, AX               ; Save AX into DX to preserve it
-MOV AX, BX               ; Move 10 into AX (for multiplication)
-IMUL DX                  ; Multiply AX by 10
-ADD AX, Cx               ; Add the third digit
+MOV CL, [SI]             
+SUB CL, '0'              
+MOV DX, AX              
+MOV AX, BX               
+IMUL DX                 
+ADD AX, Cx              
 
-INC SI                   ; Move to fourth digit
+INC SI                   
 
-MOV CL, [SI]             ; Load the fourth digit
-SUB CL, '0'              ; Convert ASCII to integer
-MOV DX, AX               ; Save AX into DX to preserve it
-MOV AX, BX               ; Move 10 into AX (for multiplication)
-IMUL DX                  ; Multiply AX by 10
-ADD AX, Cx               ; Add the fourth digit
+MOV CL, [SI]             
+SUB CL, '0'              
+MOV DX, AX               
+MOV AX, BX               
+IMUL DX                  
+ADD AX, Cx               
 
-; At this point, AX contains the converted year value
-MOV BX, currentYear      ; Load the current year (2024)
-SUB BX, AX               ; Subtract the entered year from the current year (calculate age)
-MOV age, BX              ; Store the calculated age in the 'age' variable
+INC SI                   
 
-; Compare age to 18 and check eligibility
-CMP BX, 18               ; Compare age with 18
-JL NotEligible           ; If age is less than 18, jump to not eligible message
+MOV CL, [SI]             
+SUB CL, '0'             
+MOV DX, AX               
+MOV AX, BX               
+IMUL DX                 
+ADD AX, Cx              
+
+
+MOV BX, currentYear      
+SUB BX, AX               
+MOV age, BX              
+
+
+CMP BX, 18               
+JL NotEligible          
 
 ; Eligible
 MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
+INT 21H 
 
 LEA DX, msgEligible
 MOV AH, 09H
 INT 21H
-;JMP EXIT
+;JMP EXIT                 
+
 ;*******************************Tanni****************************************
 
 
-; Display welcome message
+;welcome message
 MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
+INT 21H 
 
 LEA DX, display
 MOV AH, 09H
@@ -282,120 +287,120 @@ MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
+INT 21H 
 
-; Prompt user to enter Voter ID
+;Voter ID
 LEA DX, msgEnterID
 MOV AH, 09H
 INT 21H
 
-; Get Voter ID input
-MOV CX, 4                ; Max length of voter ID (4 characters)
-LEA SI, inputID           ; SI points to buffer
+
+MOV CX, 4                
+LEA SI, inputID           
 
 InputIDLoop:
-MOV AH, 1                ; DOS function to read a single character
-INT 21h                   ; Read input character
-MOV [SI], AL             ; Store the character in the buffer
-INC SI                   ; Move buffer pointer to next position
-LOOP InputIDLoop         ; Loop for 4 characters
+MOV AH, 1               
+INT 21h                  
+MOV [SI], AL             
+INC SI                   
+LOOP InputIDLoop         
 
-; Check the input ID against predefined voter IDs
-MOV CX, 3                ; Number of predefined voter IDs
-LEA DI, voterIDs         ; DI points to voterIDs array
-MOV validPosition, -1    ; Initialize to -1 (no match yet)
+
+MOV CX, 3                
+LEA DI, voterIDs         
+MOV validPosition, -1   
 
 CheckVoterID:
-    PUSH CX              ; Save loop counter
-    MOV SI, OFFSET inputID ; SI points to input buffer
-    MOV BX, 0            ; Index for current digit
+    PUSH CX              
+    MOV SI, OFFSET inputID 
+    MOV BX, 0           
 
 CompareDigits:
-    MOV AL, [SI + BX]    ; Load input digit
-    MOV DL, [DI + BX]    ; Load current ID digit
-    CMP AL, DL           ; Compare digits
-    JNE NotMatch         ; If mismatch, go to NotMatch
-    INC BX               ; Increment index
-    CMP BX, 4            ; Check if all 4 digits are compared
-    JNE CompareDigits    ; Loop if not
+    MOV AL, [SI + BX]    
+    MOV DL, [DI + BX]    
+    CMP AL, DL          
+    JNE NotMatch        
+    INC BX              
+    CMP BX, 4           
+    JNE CompareDigits    
 
-    ; If match found, calculate position
-    MOV AX, DI           ; Save the pointer to the matched ID
-    SUB AX, OFFSET voterIDs ; Calculate offset from base
-    SHR AX, 2            ; Divide by 4 (ID length) to get index
-    MOV validPosition, AL ; Store position in validPosition
-    POP CX               ; Restore loop counter
-    JMP DoneChecking     ; Skip further checks
+    
+    MOV AX, DI          
+    SUB AX, OFFSET voterIDs 
+    SHR AX, 2            
+    MOV validPosition, AL 
+    POP CX               
+    JMP DoneChecking     
 
 NotMatch:
-    ADD DI, 4            ; Move to next ID
-    POP CX               ; Restore loop counter
-    LOOP CheckVoterID    ; Continue loop
+    ADD DI, 4            
+    POP CX               
+    LOOP CheckVoterID    
 
 MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
+INT 21H 
 
 DoneChecking:
-    CMP validPosition, -1 ; Check if no ID matched
-    JE InvalidInputID    ; If no match, display error 
+    CMP validPosition, -1 
+    JE InvalidInputID    
     
 Mov cl, validPositionN
 mov dl, validposition
 Cmp cl,dl
 JNE InvalidInputID
 
-; Display message about PIN
+;PIN
 MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
+INT 21H 
 
-; Prompt for PIN input
+
 LEA DX, msgEnterPIN
 MOV AH, 09H
 INT 21H
 
-MOV CX, 4                ; Max length of PIN (4 characters)
-LEA SI, inputPIN         ; SI points to buffer for PIN
+MOV CX, 4                
+LEA SI, inputPIN       
 
 InputPINLoop:
-MOV AH, 1                ; DOS function to read a single character
-INT 21h                   ; Read input character
-MOV [SI], AL             ; Store the character in the buffer
-INC SI                   ; Move buffer pointer to next position
-LOOP InputPINLoop        ; Loop for 4 characters
+MOV AH, 1                
+INT 21h                  
+MOV [SI], AL             
+INC SI                   
+LOOP InputPINLoop        
 
-; Match PIN using the stored offset
-MOV AL, validPosition     ; Get the matched ID position
-MOV BL, AL                ; Copy position to BL
-MOV AX, BX                ; Load position into AX
-SHL AX, 2                 ; Multiply by 4 (shift left by 2 bits)
-LEA DI, voterpins         ; DI points to voterpins array
-ADD DI, AX                ; Adjust DI to matched PIN position
 
-MOV CX, 4                 ; Compare 4 PIN digits
-LEA SI, inputPIN          ; SI points to input PIN buffer
+MOV AL, validPosition    
+MOV BL, AL                
+MOV AX, BX                
+SHL AX, 2                
+LEA DI, voterpins         
+ADD DI, AX                
+
+MOV CX, 4                 
+LEA SI, inputPIN          
 
 ComparePIN:
-MOV AL, [SI]              ; Load input PIN digit
-MOV DL, [DI]              ; Load corresponding PIN digit
-CMP AL, DL                ; Compare digits
-JNE InvalidInputPIN       ; If mismatch, go to error
-INC SI                    ; Move to next digit
-INC DI                    ; Move to next PIN digit
-LOOP ComparePIN           ; Loop through all digits
+MOV AL, [SI]              
+MOV DL, [DI]              
+CMP AL, DL                
+JNE InvalidInputPIN       
+INC SI                    
+INC DI                    
+LOOP ComparePIN           
 
 MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
+INT 21H 
 
-; If PIN matches, grant access
+
 LEA DX, msgAuthSuccess
 MOV AH, 09H
 INT 21H   
@@ -403,95 +408,97 @@ JMP CheckIfIDExists
 
 ;xxxxxx naile shafayet er jumpxxxxxxxxxx
 naile:
-; Voting Section
+
 MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
+INT 21H 
 
-; Display candidates
-MOV CX, 3                ; Number of candidates
-LEA SI, candidates       ; SI points to the first candidate's name 
+
+MOV CX, 3               
+LEA SI, candidates       
 
 LEA DX, listprompt
 MOV AH, 09H
 INT 21h
 
 DisplayCandidatesLoop:
-    ; Display current candidate
+    
     
     MOV AH, 2
     MOV DL, 0DH
     INT 21H
     MOV DL, 0AH
-    INT 21H ; Line break
+    INT 21H 
+    
     MOV AH, 09H
     LEA DX, [SI]
-    INT 21H               ; Print the candidate's name
+    INT 21H               
 
-    ; Move to the next candidate in the array
-    ADD SI, 12            ; Move SI by 12 to the next candidate name (since each name ends with '$' and is 12 bytes)
+   
+    ADD SI, 12            
     
     LOOP DisplayCandidatesLoop
 
 
-; Prompt user to select a candidate
 MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
+INT 21H 
+
 LEA DX, msgVotePrompt
 MOV AH, 09H
 INT 21H
 
-; Get the candidate choice (1-3)
-MOV AH, 1
-INT 21h                  ; Read user input
-SUB AL, '0'              ; Convert ASCII to number (1, 2, or 3)
-MOV BL, AL               ; Store the selected candidate number in BL
 
-; Update the vote array
-DEC BL                   ; Convert to zero-indexed (1 -> 0, 2 -> 1, 3 -> 2)
-MOV SI, OFFSET votes     ; Point to the votes array
-ADD SI, BX               ; Move to the selected candidate's position
-INC BYTE PTR [SI]        ; Increment the vote for the selected candidate
+MOV AH, 1
+INT 21h                  
+SUB AL, '0'             
+MOV BL, AL               
+
+
+DEC BL                  
+MOV SI, OFFSET votes     
+ADD SI, BX               
+INC BYTE PTR [SI]       
+
+
+
 
 
 ;xxxxxxxxxShafayet er store id and display votesxxxxxxxxxxxxxxxx
+
+;candidate 
+MOV AH, 2
+MOV DL, 0DH
+INT 21H
+MOV DL, 0AH
+INT 21H 
+LEA DX, msgVoteGiven
+MOV AH, 09H
+INT 21H
+
+
+MOV AL, BL
+ADD AL, '1'              
+MOV DL, AL
+MOV AH, 02H
+INT 21H
+
+
+LEA DX, msgVoteSuccess
+MOV AH, 09H
+INT 21H 
+
+               
+
 JMP StoreVoterID   
 
 hoise:
 
 JMP DisplayVotes 
-
-;xxxxxxxxxShafayet er store id and display votesxxxxxxxxxxxxxxxx
-
-; Show message with candidate name
-MOV AH, 2
-MOV DL, 0DH
-INT 21H
-MOV DL, 0AH
-INT 21H ; Line break
-LEA DX, msgVoteGiven
-MOV AH, 09H
-INT 21H
-
-; Show the name of the candidate
-MOV AL, BL
-ADD AL, '1'              ; Convert index back to 1, 2, or 3
-MOV DL, AL
-MOV AH, 02H
-INT 21H
-
-; Confirm vote has been recorded
-LEA DX, msgVoteSuccess
-MOV AH, 09H
-INT 21H
-JMP EXIT                  ; Exit successfully
-
-
 
 InvalidInputID:
 
@@ -499,30 +506,31 @@ MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
+INT 21H  
+
 LEA DX, msgAuthFail
 MOV AH, 09H
 INT 21H
 JMP EXIT
 
 InvalidInputPIN:
-; Load the invalidAttempts counter into AL
+
 MOV AL, [invalidAttemptsPin]
 
-    ; Increment the counter
+    
 ADD AL, 1
 
-    ; Store the incremented value back to the invalidAttempts
+    
 MOV [invalidAttemptsPin], AL
 
-    ; Compare if invalidAttempts >= 3
+   
 CMP AL, 3
 JGE TooManyInvalidAttempts
 MOV AH, 2
 MOV DL, 0DH
-INT 21H
+INT 21H 
 MOV DL, 0AH
-INT 21H ; Line break 
+INT 21H 
 
 LEA DX, incorrectpin
 MOV AH, 09H
@@ -532,16 +540,16 @@ MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break 
+INT 21H  
 
 LEA DX, msgEnterPIN
 MOV AH, 09H
 INT 21H
 
-; Ensure CX is set to 4 for retry
-MOV CX, 4                ; Max length of PIN (4 characters)
-LEA SI, inputPIN         ; Point to buffer for PIN
-JMP InputPINLoop         ; Go back to retry PIN input
+
+MOV CX, 4                
+LEA SI, inputPIN         
+JMP InputPINLoop         
 
 
 
@@ -553,7 +561,7 @@ MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
+INT 21H 
 
 LEA DX, msgNotEligible
 MOV AH, 09H
@@ -565,7 +573,7 @@ MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
+INT 21H 
 
 LEA DX, msgAuthFailN
 MOV AH, 09H
@@ -573,16 +581,16 @@ INT 21H
 JMP EXIT
 
 InvalidInputPassword:
-; Load the invalidAttempts counter into AL
+
 MOV AL, [invalidAttemptsPass]
 
-    ; Increment the counter
+    
 ADD AL, 1
 
-    ; Store the incremented value back to the invalidAttempts
+    
 MOV [invalidAttemptsPass], AL
 
-    ; Compare if invalidAttempts >= 3
+    
 CMP AL, 3
 JGE TooManyInvalidAttempts
 
@@ -590,7 +598,7 @@ MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break 
+INT 21H 
 
 CMP BL, 1
 lea dx, incorrectpassword
@@ -601,16 +609,16 @@ MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break 
+INT 21H 
 
 LEA DX, msgEnterPassword
 MOV AH, 09H
 INT 21H
 
-MOV CX, 5                ; Max length of password (4 characters)
-LEA SI, inputPassword                  ; Check if this is the first retry
-JE InvalidInputPassword   ; If already retried, deny access
-INC BL                    ; Mark retry
+MOV CX, 5               
+LEA SI, inputPassword                  
+JE InvalidInputPassword  
+INC BL                    
 JMP InputPasswordLoop
 
 TooManyInvalidAttempts:
@@ -618,12 +626,12 @@ MOV AH, 2
 MOV DL, 0DH
 INT 21H
 MOV DL, 0AH
-INT 21H ; Line break
-    ; Too many invalid attempts, exit
+INT 21H 
+   
 MOV AH, 09H
 LEA DX, msgAuthFailN
 INT 21H
-JMP EXIT         ; Go back to retry password
+JMP EXIT         
 
 
 LEA DX, msgAuthFailN
@@ -637,49 +645,49 @@ JMP EXIT
 
 
 DisplayVotes:
-    ; Line break for clarity
+  
     MOV AH, 2
     MOV DL, 0DH
     INT 21H
     MOV DL, 0AH
     INT 21H
 
-    ; Display header message
+    
     
 
-    ; Prepare to loop through candidates
-    MOV CX, 3                ; Number of candidates
-    LEA SI, votes            ; Point to the votes array
-    LEA DI, candidates       ; Point to the candidates array
+   
+    MOV CX, 3               
+    LEA SI, votes            
+    LEA DI, candidates       
 
 DisplayVoteLoop:
-    ; Line break for clarity
+    
     MOV AH, 2
     MOV DL, 0DH
     INT 21H
     MOV DL, 0AH
     INT 21H
 
-    ; Display candidate name
+    
     LEA DX, [DI]
     MOV AH, 09H
     INT 21H
 
-    ; Move to the next candidate name
-    ADD DI, 12               ; Candidate names are 12 bytes each
+   
+    ADD DI, 12               
 
-    ; Display vote count
-    MOV AL, [SI]             ; Load vote count for the current candidate
-    ADD AL, '0'              ; Convert to ASCII
+   
+    MOV AL, [SI]            
+    ADD AL, '0'              
     MOV DL, AL
     MOV AH, 2
     INT 21H
 
-    ; Move to the next vote
-    INC SI                   ; Point to the next vote in the array
-    LOOP DisplayVoteLoop     ; Repeat for all candidates
+    
+    INC SI                   
+    LOOP DisplayVoteLoop    
 
-    ; Line break after displaying all votes
+    
     MOV AH, 2
     MOV DL, 0DH
     INT 21H
@@ -694,92 +702,76 @@ DisplayVoteLoop:
     
     
 CheckIfIDExists:
-    LEA SI, votedIDs         ; Point to the start of the votedIDs array
-    LEA DI, inputID          ; Point to the voter's input ID
-    MOV CX, 10               ; Maximum number of IDs
+    LEA SI, votedIDs         
+    LEA DI, inputID          
+    MOV CX, 10               
 
 MatchIDLoop:
-    MOV AX, [SI]             ; Load 2 bytes (half of a 4-byte ID)
-    CMP AX, 0                ; Check if slot is unused
-    JE AllowVoting           ; If unused, allow voting
+    MOV AX, [SI]           
+    CMP AX, 0              
+    JE AllowVoting         
 
-    CMP AX, [DI]             ; Compare with first half of input ID
-    JNE NextID               ; If not equal, check the next ID
+    CMP AX, [DI]             
+    JNE NextID               
 
-    MOV AX, [SI + 2]         ; Load the next 2 bytes
-    CMP AX, [DI + 2]         ; Compare with the second half of input ID
-    JE IDExists              ; If equal, ID already exists
+    MOV AX, [SI + 2]         
+    CMP AX, [DI + 2]         
+    JE IDExists             
 
 NextID:
-    ADD SI, 4                ; Move to the next ID
-    LOOP MatchIDLoop         ; Repeat until all IDs are checked
+    ADD SI, 4                
+    LOOP MatchIDLoop         
 
 AllowVoting:
-    JMP naile                     ; If no match is found, proceed to voting
+    JMP naile                     
 
 IDExists:
-    ; Display error message
+   
     LEA DX,givenup 
     MOV AH, 09H
     INT 21H
 
-    ; Restart the system for the next voter
+   
     JMP RestartVoting
 
     
     
 StoreVoterID:
-    LEA SI, votedIDs         ; Point to the votedIDs array
+    LEA SI, votedIDs         
 FindEmptySlot:
-    MOV AX, [SI]             ; Check current slot
-    CMP AX, 0                ; Check if slot is unused
-    JE FoundSlot             ; If unused, use this slot
-    ADD SI, 4                ; Move to the next slot
-    JMP FindEmptySlot        ; Repeat until an empty slot is found
+    MOV AX, [SI]             
+    CMP AX, 0               
+    JE FoundSlot             
+    ADD SI, 4               
+    JMP FindEmptySlot        
 
 FoundSlot:
-    LEA DI, inputID          ; Point to the voter's input ID
-    MOV AX, [DI]             ; Copy the first half of the ID
+    LEA DI, inputID          
+    MOV AX, [DI]             
     MOV [SI], AX
-    MOV AX, [DI + 2]         ; Copy the second half of the ID
+    MOV AX, [DI + 2]        
     MOV [SI + 2], AX
     JMP hoise
-   
-    
-    
-    
-
-
-
-    
+        
 
 RestartVoting:
     MOV AH, 2
     MOV DL, 0DH
     INT 21H
     MOV DL, 0AH
-    INT 21H ; Line break
+    INT 21H 
 
     LEA DX, nexttext
     MOV AH, 09H
     INT 21H
 
-    JMP MAIN              ; Restart the program from MAIN
-
-
-
-
-
+    JMP MAIN              
 
 
 
 EXIT:
-MOV AX, 4C00H         ; Exit to DOS
+MOV AX, 4C00H         
 INT 21H
 
 MAIN ENDP
 END MAIN
-
-
-
-
